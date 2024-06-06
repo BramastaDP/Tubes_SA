@@ -1,0 +1,91 @@
+BOUND ALGORITHM
+#include <iostream>
+#include <vector>
+#include <queue>
+
+using namespace std;
+
+struct Node {
+    int level;
+    int value;
+    int weight;
+    float bound;
+
+    Node(int l, int v, int w, float b) : level(l), value(v), weight(w), bound(b) {}
+};
+
+// Fungsi untuk menghitung bound node
+float calculateBound(Node u, int n, int capacity, const vector<int>& weights, const vector<int>& values) {
+    if (u.weight >= capacity) return 0;
+
+    float profit_bound = u.value;
+    int j = u.level + 1;
+    int total_weight = u.weight;
+
+    while (j < n && total_weight + weights[j] <= capacity) {
+        total_weight += weights[j];
+        profit_bound += values[j];
+        j++;
+    }
+
+    if (j < n) {
+        profit_bound += (capacity - total_weight) * values[j] / weights[j];
+    }
+
+    return profit_bound;
+}
+
+int knapsackBranchAndBound(const vector<int>& weights, const vector<int>& values, int capacity) {
+    int n = weights.size();
+    queue<Node> Q;
+    Node u(-1, 0, 0, 0);
+    u.bound = calculateBound(u, n, capacity, weights, values);
+    Q.push(u);
+
+    int max_value = 0;
+
+    while (!Q.empty()) {
+        Node v = Q.front();
+        Q.pop();
+
+        if (v.bound > max_value) {
+            u.level = v.level + 1;
+
+            // Memasukkan item saat ini
+            if (u.level < n) {
+                u.weight = v.weight + weights[u.level];
+                u.value = v.value + values[u.level];
+
+                if (u.weight <= capacity && u.value > max_value) {
+                    max_value = u.value;
+                }
+
+                u.bound = calculateBound(u, n, capacity, weights, values);
+
+                if (u.bound > max_value) {
+                    Q.push(u);
+                }
+
+                // Tidak memasukkan item saat ini
+                u.weight = v.weight;
+                u.value = v.value;
+                u.bound = calculateBound(u, n, capacity, weights, values);
+
+                if (u.bound > max_value) {
+                    Q.push(u);
+                }
+            }
+        }
+    }
+
+    return max_value;
+}
+
+int main() {
+    vector<int> weights = {20, 30, 50, 70}; // Harga barang
+    vector<int> values = {60, 90, 120, 150}; // Nilai kebahagiaan
+    int capacity = 100; // Gaji Budi
+
+    cout << "Branch and Bound Result: " << knapsackBranchAndBound(weights, values, capacity) << endl;
+    return 0;
+}

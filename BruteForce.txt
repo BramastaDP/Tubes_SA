@@ -1,0 +1,78 @@
+int knapsackBruteForce(const vector<int> &weights, const vector<int> &values, int capacity) {
+    int n = weights.size();
+    int max_value = 0;
+
+    // Fungsi rekursif untuk memeriksa semua kombinasi
+    function<void(int, int, int)> knapsackRecursive =
+        [&](int index, int current_weight, int current_value) {
+            if (index == n) {
+                if (current_weight <= capacity) {
+                    max_value = max(max_value, current_value);
+                }
+                return;
+            }
+
+            // Tidak memasukkan item saat ini
+            knapsackRecursive(index + 1, current_weight, current_value);
+
+            // Memasukkan item saat ini
+            knapsackRecursive(index + 1, current_weight + weights[index], current_value + values[index]);
+        };
+
+    knapsackRecursive(0, 0, 0);
+    return max_value;
+}
+
+void printSelectedItemsBruteForce(const vector<int> &weights, const vector<int> &values, int capacity) {
+    int n = weights.size();
+    int max_value = 0;
+    vector<bool> selected(n, false);
+    vector<bool> finalSelected(n, false);
+
+    // Fungsi rekursif untuk memeriksa semua kombinasi
+    function<void(int, int, int, vector<bool> &)> knapsackRecursive =
+        [&](int index, int current_weight, int current_value, vector<bool> &selected) {
+            if (index == n) {
+                if (current_weight <= capacity && current_value > max_value) {
+                    max_value = current_value;
+                    for (int i = 0; i < n; ++i) {
+                        finalSelected[i] = selected[i];
+                    }
+                }
+                return;
+            }
+
+            // Tidak memasukkan item saat ini
+            knapsackRecursive(index + 1, current_weight, current_value, selected);
+
+            // Memasukkan item saat ini
+            if (current_weight + weights[index] <= capacity) {
+                selected[index] = true;
+                knapsackRecursive(index + 1, current_weight + weights[index], current_value + values[index], selected);
+                selected[index] = false;
+            }
+        };
+
+    knapsackRecursive(0, 0, 0, selected);
+
+    cout << "Kombinasi BruteForce: {";
+    bool first = true;
+    for (int i = 0; i < n; ++i) {
+        if (finalSelected[i]) {
+            if (!first) {
+                cout << ", ";
+            }
+            cout << i + 1;
+            first = false;
+        }
+    }
+    cout << "}" << endl;
+
+    int total_weight = 0;
+    for (int i = 0; i < n; ++i) {
+        if (finalSelected[i]) {
+            total_weight += weights[i];
+        }
+    }
+    cout << "Total Weight: " << total_weight << endl;
+}
